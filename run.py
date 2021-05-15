@@ -1,7 +1,8 @@
 import random
-from agents import Economy
+from galaxy import Galaxy
 
 # Constants
+FORCE = True
 RES_ALLOCATION = {
 	'iron': {
 		'init_amount': random.randint(4000, 8000),
@@ -20,4 +21,14 @@ RES_ALLOCATION = {
 	}
 }
 
-Economy(10, RES_ALLOCATION, .1, 10)
+MAX_TIME_STEP = 10
+galaxy = Galaxy(galaxy_radius = 500,
+				system_count = 15,
+				allocation = RES_ALLOCATION,
+				resource_deviation = .1,
+				resource_variation = 2,
+				price_modifier = 10)
+
+for time in range(MAX_TIME_STEP):
+	galaxy.time_step = time + 1
+	galaxy.step(time)

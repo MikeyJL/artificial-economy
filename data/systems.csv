@@ -1,0 +1,16 @@
+system_id,x_loc,y_loc,exports,imports
+0,0,0,"{'uranium': {'amount': 62, 'unit_price': 248.08}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+1,266,-199,"{'uranium': {'amount': 68, 'unit_price': 226.19}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+2,-150,-425,"{'uranium': {'amount': 63, 'unit_price': 244.14}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+3,8,-240,"{'uranium': {'amount': 74, 'unit_price': 207.85}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+4,-13,369,"{'iron': {'amount': 952, 'unit_price': 21.54}}","{'zinc': {'inventory': 0}, 'uranium': {'inventory': 0}}"
+5,257,208,"{'uranium': {'amount': 69, 'unit_price': 222.91}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+6,-305,20,"{'iron': {'amount': 892, 'unit_price': 22.99}}","{'zinc': {'inventory': 0}, 'uranium': {'inventory': 0}}"
+7,-13,398,"{'uranium': {'amount': 73, 'unit_price': 210.7}, 'iron': {'amount': 923, 'unit_price': 22.22}}",{'zinc': {'inventory': 0}}
+8,-179,-333,"{'iron': {'amount': 852, 'unit_price': 24.07}, 'zinc': {'amount': 1569, 'unit_price': 19.61}}",{'uranium': {'inventory': 0}}
+9,-350,499,"{'uranium': {'amount': 65, 'unit_price': 236.63}}","{'iron': {'inventory': 0}, 'zinc': {'inventory': 0}}"
+10,-407,192,"{'iron': {'amount': 905, 'unit_price': 22.66}}","{'zinc': {'inventory': 0}, 'uranium': {'inventory': 0}}"
+11,344,-485,"{'zinc': {'amount': 1517, 'unit_price': 20.28}}","{'iron': {'inventory': 0}, 'uranium': {'inventory': 0}}"
+12,-243,137,"{'iron': {'amount': 996, 'unit_price': 20.59}, 'uranium': {'amount': 70, 'unit_price': 219.73}}",{'zinc': {'inventory': 0}}
+13,342,436,"{'zinc': {'amount': 1511, 'unit_price': 20.36}}","{'iron': {'inventory': 0}, 'uranium': {'inventory': 0}}"
+14,356,-238,"{'zinc': {'amount': 1644, 'unit_price': 18.71}}","{'iron': {'inventory': 0}, 'uranium': {'inventory': 0}}"

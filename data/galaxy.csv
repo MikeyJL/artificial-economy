@@ -1,0 +1,2 @@
+resource_deviation,resource_variation,price_modifier,allocation
+0.1,2,10,"{'iron': {'init_amount': 5481, 'instances': 0, 'total_amount': 0}, 'zinc': {'init_amount': 6297, 'instances': 0, 'total_amount': 0}, 'uranium': {'init_amount': 536, 'instances': 0, 'total_amount': 0}}"
