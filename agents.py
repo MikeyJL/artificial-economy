@@ -19,23 +19,28 @@ class Economy:
 			self.allocation[ALLOCATED_RES]['instances'] += 1
 			self.systems.append({
 				'id': system_id,
-				'resource': ALLOCATED_RES,
-				'amount': 0
+				'resources': {
+					ALLOCATED_RES: {
+						'amount': 0
+					}
+				}
 			})
 
 		# Fills each system's resources
 		for system in self.systems:
-			SELECTED_RES = self.allocation[system['resource']]
-			LOWER_VAL = round((SELECTED_RES['init_amount'] / SELECTED_RES['instances']) * (1 - self.resource_deviation))
-			UPPER_VAL = round((SELECTED_RES['init_amount'] / SELECTED_RES['instances']) * (1 + self.resource_deviation))
-			system['amount'] = random.randint(LOWER_VAL, UPPER_VAL)
+			for system_res in system['resources']:
+				SELECTED_RES = self.allocation[system_res]
+				LOWER_VAL = round((SELECTED_RES['init_amount'] / SELECTED_RES['instances']) * (1 - self.resource_deviation))
+				UPPER_VAL = round((SELECTED_RES['init_amount'] / SELECTED_RES['instances']) * (1 + self.resource_deviation))
+				system['resources'][system_res]['amount'] = random.randint(LOWER_VAL, UPPER_VAL)
 
 		# Removes init_amount and adds all units of resources in the economy
 		for system in self.systems:
-			SELECTED_RES = self.allocation[system['resource']]
-			SELECTED_RES['total_amount'] += system['amount']
-			if 'init_amount' in SELECTED_RES:
-				SELECTED_RES.pop('init_amount')
+			for system_res in system['resources']:
+				SELECTED_RES = self.allocation[system_res]
+				SELECTED_RES['total_amount'] += system['resources'][system_res]['amount']
+				if 'init_amount' in SELECTED_RES:
+					SELECTED_RES.pop('init_amount')
 
 		# Creates the total value of the economy and generates an average unit price for each resource based on scarcity
 		total_amount = 0
@@ -52,14 +57,16 @@ class Economy:
 		for res in self.resources:
 			res_unit_count = 0
 			for system in self.systems:
-				if res == system['resource']:
-					res_unit_count += system['amount']
+				for system_res in system['resources']:
+					if res == system_res:
+						res_unit_count += system['resources'][system_res]['amount']
 			self.allocation[res]['avg_res_unit'] = round(res_unit_count / self.allocation[res]['instances'])
 		
 		# Creates a system/local price based off the global total resource and local scarcity
 		for system in self.systems:
-			ADJUSTED_PRICE_INDEX = self.allocation[system['resource']]['avg_res_unit'] / system['amount']
-			system['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[system['resource']]['global_unit_price'], 2)
+			for system_res in system['resources']:
+				ADJUSTED_PRICE_INDEX = self.allocation[system_res]['avg_res_unit'] / system['resources'][system_res]['amount']
+				system['resources'][system_res]['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[system_res]['global_unit_price'], 2)
 
 		# Degbugging
 		print('\n\n---------- ALLOCATION ----------')
@@ -74,6 +81,4 @@ class Economy:
 		print('\n\n---------- SYSTEMS ----------')
 		for system in self.systems:
 			print('\nid: %s' % system['id'])
-			print('resource: %s' % system['resource'])
-			print('amount: %s' % system['amount'])
-			print('unit_price: %s' % system['unit_price'])
+			print('resources: %s' % system['resources'])
