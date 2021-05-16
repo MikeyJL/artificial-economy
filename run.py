@@ -31,9 +31,9 @@ galaxy = Galaxy(galaxy_radius = 500,
 								resource_variation = 2,
 								price_modifier = 10)
 
-for time in range(MAX_TIME_STEP):
+for time in range(1, MAX_TIME_STEP + 1):
 	galaxy.step(time)
-	if time == MAX_TIME_STEP - 1 or time == 0:
+	if time == MAX_TIME_STEP or time == 1:
 		print('\n--- Galaxy ---\n')
 		print('time_step: %s' % time)
 		print('total_value: %s' % galaxy.total_value)

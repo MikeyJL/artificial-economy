@@ -70,32 +70,9 @@ class Galaxy:
 				if 'init_amount' in SELECTED_RES:
 					SELECTED_RES.pop('init_amount')
 
-		# Creates the total value of the economy and generates an average unit price for each resource based on scarcity
-		total_amount = 0
-		total_amount_all = 0
-		for res in self.allocation:
-			total_amount_all += self.allocation[res]['total_amount']
-		for res in self.allocation:
-			global_unit_price = round(total_amount_all / self.allocation[res]['total_amount'] * self.price_modifier, 2)
-			self.allocation[res]['global_unit_price'] = global_unit_price
-			total_amount += global_unit_price * self.allocation[res]['total_amount']
-		self.total_value = round(total_amount, 2)
-
-		# Calculates the global average resource units
-		for res in self.resources:
-			res_unit_count = 0
-			for system in self.systems:
-				for system_res in system.exports:
-					if res == system_res:
-						res_unit_count += system.exports[system_res]['amount']
-			self.allocation[res]['avg_res_unit'] = round(res_unit_count / self.allocation[res]['instances'])
-		
-		# Creates a system/local price based off the global total resource and local scarcity
-		for system in self.systems:
-			for system_res in system.exports:
-				ADJUSTED_PRICE_INDEX = self.allocation[system_res]['avg_res_unit'] / system.exports[system_res]['amount']
-				system.exports[system_res]['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[system_res]['global_unit_price'], 2)
-			system.save_init_state()
+		self.calculate_global_total_value()
+		self.calculate_global_avg_resource_units()
+		self.calculate_local_system_price(0)
 
 		# Plots systems on a scatter for visuals
 		x = [system.x_loc for system in self.systems]
@@ -110,6 +87,11 @@ class Galaxy:
 
 		# Opens new orders for required resources for each system
 		self.order_resources(time)
+
+		# Updates economy
+		self.calculate_global_total_value()
+		self.calculate_global_avg_resource_units()
+		self.calculate_local_system_price(time)
 
 
 	def order_resources (self, time):
@@ -160,3 +142,37 @@ class Galaxy:
 
 		# Overwrites the ledger with new data
 		overwrite_csv('trade_ledger', TRADE_LEDGER_HEADER, update_data)
+
+	# Creates the total value of the economy and generates an average unit price for each resource based on scarcity
+	def calculate_global_total_value (self):
+		total_amount = 0
+		total_amount_all = 0
+		for res in self.allocation:
+			total_amount_all += self.allocation[res]['total_amount']
+		for res in self.allocation:
+			global_unit_price = round(total_amount_all / self.allocation[res]['total_amount'] * self.price_modifier, 2)
+			self.allocation[res]['global_unit_price'] = global_unit_price
+			total_amount += global_unit_price * self.allocation[res]['total_amount']
+		self.total_value = round(total_amount, 2)
+
+	# Calculates the global average resource units
+	def calculate_global_avg_resource_units (self):
+		for res in self.resources:
+			res_unit_count = 0
+			for system in self.systems:
+				for export_res in system.exports:
+					if res == export_res:
+						res_unit_count += system.exports[export_res]['amount']
+				for import_res in system.imports:
+					if res == import_res:
+						res_unit_count += system.imports[import_res]['inventory']
+			self.allocation[res]['avg_res_unit'] = round(res_unit_count / self.allocation[res]['instances'])
+	
+	# Creates a system/local price based off the global total resource and local scarcity
+	def calculate_local_system_price (self, time):
+		for system in self.systems:
+			for system_res in system.exports:
+				ADJUSTED_PRICE_INDEX = self.allocation[system_res]['avg_res_unit'] / system.exports[system_res]['amount']
+				system.exports[system_res]['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[system_res]['global_unit_price'], 2)
+			if time == 0:
+				system.save_init_state()
