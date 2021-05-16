@@ -46,18 +46,3 @@ while running:
 	time += 1
 	clock.tick(FPS)
 pygame.quit()
-
-"""
-for time in range(1, MAX_TIME_STEP + 1):
-	galaxy.step(time)
-	if time == MAX_TIME_STEP or time == 1:
-		print('\n--- Galaxy ---\n')
-		print('time_step: %s' % time)
-		print('total_value: %s' % galaxy.total_value)
-		print('\n--- Systems ---\n')
-		print(pd.read_csv('data/systems.csv').to_string(index = False))
-		print('\n--- Exports ---\n')
-		print(pd.read_csv('data/exports.csv').to_string(index = False))
-		print('\n--- Imports ---\n')
-		print(pd.read_csv('data/imports.csv').to_string(index = False))
-"""

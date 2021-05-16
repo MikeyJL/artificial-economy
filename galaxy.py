@@ -115,7 +115,6 @@ class Galaxy:
 									if target_system.system_id == int(row[0]):
 										for imported_res in target_system.imports:
 											if imported_res == row[3]:
-												print(target_system)
 												target_system.imports[imported_res]['inventory'] += 1
 												target_system.update_system_imports()
 
