@@ -23,7 +23,7 @@ RES_ALLOCATION = {
 
 # Plots systems on a scatter for visuals
 pygame.init()
-FPS = 40
+FPS = 24
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode([500, 500])
 screen.fill((255, 255, 255))

@@ -76,7 +76,7 @@ class Galaxy:
 		for system_buyer in self.systems:
 			self.game_screen.blit(system_buyer.image, system_buyer.rect)
 
-			if len(system_buyer.orders) < 2:
+			if len(system_buyer.orders) < 5:
 
 				# Then places on order and recorded on the global trade ledger
 				for trade_res in system_buyer.imports:
