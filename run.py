@@ -1,10 +1,8 @@
+import pygame
 import random
-import pandas as pd
-from pandas.core.tools.datetimes import to_time
 from galaxy import Galaxy
+import time as t
 
-# Constants
-FORCE = True
 RES_ALLOCATION = {
 	'iron': {
 		'init_amount': random.randint(4000, 8000),
@@ -23,14 +21,33 @@ RES_ALLOCATION = {
 	}
 }
 
-MAX_TIME_STEP = 10
-galaxy = Galaxy(galaxy_radius = 500,
+# Plots systems on a scatter for visuals
+pygame.init()
+FPS = 40
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode([500, 500])
+screen.fill((255, 255, 255))
+galaxy = Galaxy(game_screen = screen,
+								galaxy_size = 500,
 								system_count = 15,
 								allocation = RES_ALLOCATION,
 								resource_deviation = .1,
 								resource_variation = 2,
 								price_modifier = 10)
+running = True
+time = 0
+while running:
+	screen.fill((255, 255, 255))
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			running = False
+	galaxy.step(time)
+	pygame.display.flip()
+	time += 1
+	clock.tick(FPS)
+pygame.quit()
 
+"""
 for time in range(1, MAX_TIME_STEP + 1):
 	galaxy.step(time)
 	if time == MAX_TIME_STEP or time == 1:
@@ -43,3 +60,4 @@ for time in range(1, MAX_TIME_STEP + 1):
 		print(pd.read_csv('data/exports.csv').to_string(index = False))
 		print('\n--- Imports ---\n')
 		print(pd.read_csv('data/imports.csv').to_string(index = False))
+"""

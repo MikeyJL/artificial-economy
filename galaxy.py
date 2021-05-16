@@ -1,24 +1,18 @@
+import pygame
 import random
-import matplotlib.pyplot as plt
-import numpy as np
 from system import System
-from utils import init_csv, read_and_return_csv, overwrite_csv
-
-# CSV headers
-GALAXY_HEADER = ['resource_deviation', 'resource_variation', 'price_modifier', 'allocation']
-SYSTEMS_HEADER = ['system_id', 'x_loc', 'y_loc']
-TRADE_LEDGER_HEADER = ['system_id', 'seller_system_id', 'resource', 'price', 'amount', 'issued', 'delivery', 'status']
-EXPORTS_HEADER = ['system_id', 'resource', 'amount', 'unit_price']
-IMPORTS_HEADER = ['system_id', 'resource', 'inventory']
+from utils import init_csv, read_and_return_csv, overwrite_csv, GALAXY_HEADER, SYSTEMS_HEADER, EXPORTS_HEADER, IMPORTS_HEADER, TRADE_LEDGER_HEADER
 
 class Galaxy:
-	def __init__(self, galaxy_radius, system_count, allocation, resource_deviation, resource_variation, price_modifier):
+	def __init__(self, game_screen, galaxy_size, system_count, allocation, resource_deviation, resource_variation, price_modifier):
+		self.game_screen = game_screen
 		self.system_count = system_count
 		self.resource_deviation = resource_deviation
 		self.resource_variation = resource_variation
 		self.price_modifier = price_modifier
 		self.allocation = allocation
 		self.systems = []
+		self.system_sprites = pygame.sprite.Group()
 		self.resources = []
 		self.trade_ledger = []
 
@@ -52,7 +46,9 @@ class Galaxy:
 					imports_builder[res] = {
 						'inventory': 0
 					}
-			self.systems.append(System(system_id, exports_builder, imports_builder, galaxy_radius, self.systems))
+			NEW_SYSTEM = System(game_screen, system_id, exports_builder, imports_builder, galaxy_size, self.systems)
+			self.systems.append(NEW_SYSTEM)
+			self.system_sprites.add(NEW_SYSTEM)
 
 		# Fills each system's resources
 		for system in self.systems:
@@ -73,75 +69,65 @@ class Galaxy:
 		self.calculate_global_total_value()
 		self.calculate_global_avg_resource_units()
 		self.calculate_local_system_price(0)
-
-		# Plots systems on a scatter for visuals
-		x = [system.x_loc for system in self.systems]
-		y = [system.y_loc for system in self.systems]
-		plt.scatter(np.array(x), np.array(y), s = np.random.randint(1, 3, len(x)))
-		plt.show()
 		
-	def step (self, time):
-		
-		# Checks the global trade ledger for deliveries arriving at current time
-		self.check_orders(time)
+	def step (self, time):		
 
-		# Opens new orders for required resources for each system
-		self.order_resources(time)
-
-		# Updates economy
-		self.calculate_global_total_value()
-		self.calculate_global_avg_resource_units()
-		self.calculate_local_system_price(time)
-
-
-	def order_resources (self, time):
-
-		# Then places on order and recorded on the global trade ledger
+		# Move transporters
 		for system_buyer in self.systems:
-			for trade_res in system_buyer.imports:
+			self.game_screen.blit(system_buyer.image, system_buyer.rect)
 
-				# Lists all the systems selling the required resource
-				SYSTEMS_WITH_RES = [{
-					'seller_system_id': system.system_id,
-					'resource': trade_res,
-					'price': system.exports[trade_res]['unit_price']
-				} for system in self.systems if trade_res in system.exports]
-				
-				# Finds the best price for a resource that a system needs
-				BEST_PRICE = 0
-				for system_seller in SYSTEMS_WITH_RES:
-					if BEST_PRICE == 0:
-						BEST_PRICE = system_seller
-					elif system_seller['price'] < BEST_PRICE['price']:
-						BEST_PRICE = system_seller
-				system_buyer.place_order(time, BEST_PRICE)
+			if len(system_buyer.orders) < 2:
 
-			# Removes amount from the selling system
-			for system in self.systems:
-				if system.system_id == BEST_PRICE['seller_system_id']:
-					for export_res in system.exports:
-						if export_res == BEST_PRICE['resource']:
-							system.exports[export_res]['amount'] -= 1
-							system.update_system_exports()
+				# Then places on order and recorded on the global trade ledger
+				for trade_res in system_buyer.imports:
 
-	def check_orders (self, time):
+					# Lists all the systems selling the required resource
+					SYSTEMS_WITH_RES = [system for system in self.systems if trade_res in system.exports]
+					
+					# Finds the best price for a resource that a system needs
+					BEST_PRICE = 0
+					for system_seller in SYSTEMS_WITH_RES:
+						if BEST_PRICE == 0:
+							BEST_PRICE = system_seller
+						elif system_seller.exports[trade_res]['unit_price'] < BEST_PRICE.exports[trade_res]['unit_price']:
+							BEST_PRICE = system_seller
+					system_buyer.place_order(time, trade_res, BEST_PRICE)
 
-		# Gets all data from global trade ledger
-		update_data = read_and_return_csv('trade_ledger')
+					# Removes amount from the selling system
+					for system in self.systems:
+						if system.system_id == BEST_PRICE.system_id:
+							for export_res in system.exports:
+								if export_res == trade_res:
+									system.exports[export_res]['amount'] -= 1
+									system.update_system_exports()
+			else:
+				for order in system_buyer.orders:
+					if order.move():
+						# Gets all data from global trade ledger
+						update_data = read_and_return_csv('trade_ledger')
 
-		# Updates the ledger if resource has been delivered
-		for row in update_data:
-			if int(row[6]) == time and row[7] == 'open':
-				row[7] = 'resolved'
-				for system in self.systems:
-					if system.system_id == int(row[0]):
-						for imported_res in system.imports:
-							if imported_res == row[2]:
-								system.imports[imported_res]['inventory'] += 1
-								system.update_system_imports()
+						# Updates the ledger if resource has been delivered
+						for row in update_data:
+							if row[8] == 'open' and system_buyer.system_id == int(row[0]) and order.origin_system_id == int(row[1]):
+								row[7] = time
+								row[8] = 'resolved'
+								for target_system in self.systems:
+									if target_system.system_id == int(row[0]):
+										for imported_res in target_system.imports:
+											if imported_res == row[3]:
+												print(target_system)
+												target_system.imports[imported_res]['inventory'] += 1
+												target_system.update_system_imports()
 
-		# Overwrites the ledger with new data
-		overwrite_csv('trade_ledger', TRADE_LEDGER_HEADER, update_data)
+						# Overwrites the ledger with new data
+						overwrite_csv('trade_ledger', TRADE_LEDGER_HEADER, update_data)
+						order.kill()
+						system_buyer.orders.remove(order)
+
+						# Updates economy
+						self.calculate_global_total_value()
+						self.calculate_global_avg_resource_units()
+						self.calculate_local_system_price(time)
 
 	# Creates the total value of the economy and generates an average unit price for each resource based on scarcity
 	def calculate_global_total_value (self):
