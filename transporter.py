@@ -1,7 +1,7 @@
 import pygame
 
 class Transporter (pygame.sprite.Sprite):
-  def __init__ (self, game_screen, origin_system_id, current_x_y, target_system_id, target_x_y, target_system):
+  def __init__ (self, game_screen, origin_system_id, current_x_y, target_system_id, target_x_y, target_system, color):
     self.game_screen = game_screen
     self.origin_system_id = origin_system_id
     self.target_system_id = target_system_id
@@ -11,7 +11,7 @@ class Transporter (pygame.sprite.Sprite):
     # pygame init
     super(Transporter, self).__init__()
     self.image = pygame.Surface((3, 3))
-    self.image.fill((255, 0, 0))
+    self.image.fill(color)
     self.rect = self.image.get_rect()
     self.rect.center = current_x_y
   

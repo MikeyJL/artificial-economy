@@ -91,7 +91,7 @@ class Galaxy:
 							BEST_PRICE = system_seller
 						elif system_seller.exports[trade_res]['unit_price'] < BEST_PRICE.exports[trade_res]['unit_price']:
 							BEST_PRICE = system_seller
-					system_buyer.place_order(time, trade_res, BEST_PRICE)
+					system_buyer.place_order(time, trade_res, self.allocation[trade_res]['color'], BEST_PRICE)
 
 					# Removes amount from the selling system
 					for system in self.systems:

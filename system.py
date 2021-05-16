@@ -12,7 +12,7 @@ class System (pygame.sprite.Sprite):
 		self.exports = exports
 		self.imports = imports
 		self.galaxy_size = galaxy_size
-		self.star_size = random.randint(3, 5)
+		self.star_size = len(exports)
 		self.orders = []
 		self.order_sprites = pygame.sprite.Group()
 
@@ -111,7 +111,7 @@ class System (pygame.sprite.Sprite):
 		overwrite_csv('imports', IMPORTS_HEADER, update_data)
 
 	# Creates a new open position and records it in the csv trade_ledger (historical)
-	def place_order (self, time, trade_res, system_seller):
+	def place_order (self, time, trade_res, color, system_seller):
 		with open('data/trade_ledger.csv', 'a+', newline='') as file:
 			writer = csv.writer(file)
 			writer.writerow([
@@ -130,6 +130,7 @@ class System (pygame.sprite.Sprite):
 														(system_seller.x_loc, system_seller.y_loc),
 														self.system_id,
 														(self.x_loc, self.y_loc),
-														self)
+														self,
+														color)
 		self.orders.append(NEW_ORDER)
 		self.order_sprites.add(NEW_ORDER)
