@@ -1,11 +1,15 @@
-import csv
-from os import write
-import shutil
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 from system import System
-from tempfile import NamedTemporaryFile
+from utils import init_csv, read_and_return_csv, overwrite_csv
+
+# CSV headers
+GALAXY_HEADER = ['resource_deviation', 'resource_variation', 'price_modifier', 'allocation']
+SYSTEMS_HEADER = ['system_id', 'x_loc', 'y_loc']
+TRADE_LEDGER_HEADER = ['system_id', 'seller_system_id', 'resource', 'price', 'amount', 'issued', 'delivery', 'status']
+EXPORTS_HEADER = ['system_id', 'resource', 'amount', 'unit_price']
+IMPORTS_HEADER = ['system_id', 'resource', 'inventory']
 
 class Galaxy:
 	def __init__(self, galaxy_radius, system_count, allocation, resource_deviation, resource_variation, price_modifier):
@@ -16,44 +20,17 @@ class Galaxy:
 		self.allocation = allocation
 		self.systems = []
 		self.resources = []
-		self.trades = []
+		self.trade_ledger = []
 
 		# Inits data store
-		with open('data/galaxy.csv', 'w', newline='') as file:
-			writer = csv.writer(file)
-			writer.writerow([
-				'resource_deviation',
-				'resource_variation',
-				'price_modifier',
-				'allocation'
-			])
-			writer.writerow([
-				self.resource_deviation,
-				self.resource_variation,
-				self.price_modifier,
-				self.allocation
-			])
-		with open('data/systems.csv', 'w', newline='') as file:
-			writer = csv.writer(file)
-			writer.writerow([
-				'system_id',
-				'x_loc',
-				'y_loc',
-				'exports',
-				'imports'
-			])
-		with open('data/trade_ledger.csv', 'w', newline='') as file:
-			writer = csv.writer(file)
-			writer.writerow([
-				'system_id',
-				'seller_system_id',
-				'resource',
-				'price',
-				'amount',
-				'delivery',
-				'time_issued',
-				'status'
-			])
+		init_csv('galaxy',
+						 GALAXY_HEADER,
+						 True,
+						 [self.resource_deviation, self.resource_variation, self.price_modifier, self.allocation])
+		init_csv('systems', SYSTEMS_HEADER, False, None)
+		init_csv('trade_ledger', TRADE_LEDGER_HEADER, False, None)
+		init_csv('exports', EXPORTS_HEADER, False, None)
+		init_csv('imports', IMPORTS_HEADER, False, None)
 
 		# Adds resources to its own array
 		for res in allocation:
@@ -120,45 +97,66 @@ class Galaxy:
 				system.exports[system_res]['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[system_res]['global_unit_price'], 2)
 			system.save_init_state()
 
+		# Plots systems on a scatter for visuals
 		x = [system.x_loc for system in self.systems]
 		y = [system.y_loc for system in self.systems]
 		plt.scatter(np.array(x), np.array(y), s = np.random.randint(1, 3, len(x)))
 		plt.show()
-
-	def load_galaxy ():
-		return
 		
 	def step (self, time):
+		
+		# Checks the global trade ledger for deliveries arriving at current time
 		self.check_orders(time)
+
+		# Opens new orders for required resources for each system
 		self.order_resources(time)
 
+
 	def order_resources (self, time):
+
+		# Then places on order and recorded on the global trade ledger
 		for system_buyer in self.systems:
 			for trade_res in system_buyer.imports:
+
+				# Lists all the systems selling the required resource
 				SYSTEMS_WITH_RES = [{
 					'seller_system_id': system.system_id,
 					'resource': trade_res,
 					'price': system.exports[trade_res]['unit_price']
 				} for system in self.systems if trade_res in system.exports]
+				
+				# Finds the best price for a resource that a system needs
 				BEST_PRICE = 0
 				for system_seller in SYSTEMS_WITH_RES:
 					if BEST_PRICE == 0:
 						BEST_PRICE = system_seller
 					elif system_seller['price'] < BEST_PRICE['price']:
 						BEST_PRICE = system_seller
-				system_buyer.place_order(time, system_seller)
+				system_buyer.place_order(time, BEST_PRICE)
+
+			# Removes amount from the selling system
+			for system in self.systems:
+				if system.system_id == BEST_PRICE['seller_system_id']:
+					for export_res in system.exports:
+						if export_res == BEST_PRICE['resource']:
+							system.exports[export_res]['amount'] -= 1
+							system.update_system_exports()
 
 	def check_orders (self, time):
-		update_data = []
-		with open('data/trade_ledger.csv', 'r', newline='') as file:
-			reader = csv.reader(file)
-			for row in reader:
-				update_data.append(row)
+
+		# Gets all data from global trade ledger
+		update_data = read_and_return_csv('trade_ledger')
+
+		# Updates the ledger if resource has been delivered
 		for row in update_data:
-			if row[0] != 'system_id':
-				if int(row[5]) == time and row[7] == 'open':
-					row[7] = 'resolved'
-		with open('data/trade_ledger.csv', 'w', newline='') as file:
-			writer = csv.writer(file)
-			for row in update_data:
-				writer.writerow(row)
+			if int(row[6]) == time and row[7] == 'open':
+				row[7] = 'resolved'
+				for system in self.systems:
+					if system.system_id == int(row[0]):
+						for imported_res in system.imports:
+							if imported_res == row[2]:
+								system.imports[imported_res]['inventory'] += 1
+								system.update_system_imports()
+
+		# Overwrites the ledger with new data
+		overwrite_csv('trade_ledger', TRADE_LEDGER_HEADER, update_data)

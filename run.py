@@ -1,4 +1,6 @@
 import random
+import pandas as pd
+from pandas.core.tools.datetimes import to_time
 from galaxy import Galaxy
 
 # Constants
@@ -23,12 +25,21 @@ RES_ALLOCATION = {
 
 MAX_TIME_STEP = 10
 galaxy = Galaxy(galaxy_radius = 500,
-				system_count = 15,
-				allocation = RES_ALLOCATION,
-				resource_deviation = .1,
-				resource_variation = 2,
-				price_modifier = 10)
+								system_count = 15,
+								allocation = RES_ALLOCATION,
+								resource_deviation = .1,
+								resource_variation = 2,
+								price_modifier = 10)
 
 for time in range(MAX_TIME_STEP):
-	galaxy.time_step = time + 1
 	galaxy.step(time)
+	if time == MAX_TIME_STEP - 1 or time == 0:
+		print('\n--- Galaxy ---\n')
+		print('time_step: %s' % time)
+		print('total_value: %s' % galaxy.total_value)
+		print('\n--- Systems ---\n')
+		print(pd.read_csv('data/systems.csv').to_string(index = False))
+		print('\n--- Exports ---\n')
+		print(pd.read_csv('data/exports.csv').to_string(index = False))
+		print('\n--- Imports ---\n')
+		print(pd.read_csv('data/imports.csv').to_string(index = False))
