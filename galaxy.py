@@ -1,10 +1,8 @@
-import csv
 import string
 import pygame
 import random
 from system import System
 from planet import Planet
-from utils import init_csv, read_and_return_csv, overwrite_csv
 
 class Galaxy:
 	def __init__(self, game_screen, galaxy_size, system_count, allocation, resource_deviation, resource_variation, price_modifier):
@@ -17,17 +15,7 @@ class Galaxy:
 		self.systems = []
 		self.system_sprites = pygame.sprite.Group()
 		self.resources = []
-		self.trade_ledger = []
-
-		# Inits data store
-		init_csv('galaxy',
-						 True,
-						 [self.resource_deviation, self.resource_variation, self.price_modifier, self.allocation])
-		init_csv('systems', False, None)
-		init_csv('planets', False, None)
-		init_csv('trade_ledger', False, None)
-		init_csv('exports', False, None)
-		init_csv('imports', False, None)
+		self.active_trades = []
 
 		# Adds resources to its own array
 		for res in allocation:
@@ -41,17 +29,9 @@ class Galaxy:
 			while system_id in [system.system_id for system in self.systems] or system_id == '':
 				system_id = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
 			NEW_SYSTEM = System(game_screen, system_id, galaxy_size, self.systems)
-			with open('data/systems.csv', 'a+', newline='') as file:
-				writer = csv.writer(file)
-				writer.writerow([
-					NEW_SYSTEM.system_id,
-					NEW_SYSTEM.x_loc,
-					NEW_SYSTEM.y_loc,
-					NEW_SYSTEM.star_size
-				])
 
 			# Generates planets
-			for planet_id in range(random.randint(1, 2)):
+			for planet_id in range(random.randint(0, 5)):
 				naming_convention = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
 				# Builds the resources
@@ -71,14 +51,8 @@ class Galaxy:
 						}
 				
 				# Inits the planet
-				NEW_PLANET = Planet(game_screen, NEW_SYSTEM, NEW_SYSTEM.system_id, naming_convention[planet_id], NEW_SYSTEM.x_loc, NEW_SYSTEM.y_loc, exports_builder, imports_builder)
+				NEW_PLANET = Planet(game_screen, self.active_trades, NEW_SYSTEM, NEW_SYSTEM.system_id, naming_convention[planet_id], NEW_SYSTEM.x_loc, NEW_SYSTEM.y_loc, exports_builder, imports_builder)
 				NEW_SYSTEM.planets.append(NEW_PLANET)
-				with open('data/planets.csv', 'a+', newline='') as file:
-					writer = csv.writer(file)
-					writer.writerow([
-						NEW_PLANET.parent_id,
-						NEW_PLANET.planet_id
-					])
 
 			self.systems.append(NEW_SYSTEM)
 			self.system_sprites.add(NEW_SYSTEM)
@@ -95,9 +69,9 @@ class Galaxy:
 
 		self.calculate_global_total_value()
 		self.calculate_global_avg_resource_units()
-		self.calculate_local_system_price(0)
+		self.calculate_local_system_price()
 		
-	def step (self, time):		
+	def step (self):		
 
 		# Move transporters
 		for system_buyer in self.systems:
@@ -125,7 +99,7 @@ class Galaxy:
 								BEST_PRICE = planet_seller
 							elif planet_seller.exports[trade_res]['unit_price'] < BEST_PRICE.exports[trade_res]['unit_price']:
 								BEST_PRICE = planet_seller
-						planet_buyer.place_order(time, trade_res, self.allocation[trade_res]['color'], BEST_PRICE)
+						planet_buyer.place_order(trade_res, self.allocation[trade_res]['color'], BEST_PRICE)
 
 						# Removes amount from the selling system
 						for system in self.systems:
@@ -134,36 +108,30 @@ class Galaxy:
 									for export_res in planet.exports:
 										if export_res == trade_res:
 											planet.exports[export_res]['amount'] -= 1
-											planet.update_planet_exports()
 
 				for planet_buyer in system_buyer.planets:
 					for order in planet_buyer.orders:
 						if order.move():
-							# Gets all data from global trade ledger
-							update_data = read_and_return_csv('trade_ledger')
-
-							# Updates the ledger if resource has been delivered
-							for row in update_data:
-								if row[10] == 'open' and planet_buyer.parent_id == row[0] and planet_buyer.planet_id == row[1] and order.origin_system_id == row[2] and order.origin_planet_id == row[3]:
-									row[9] = time
-									row[10] = 'resolved'
+							for entry in self.active_trades:
+								if planet_buyer.parent_id == entry['buyer_system_id'] and planet_buyer.planet_id == entry['buyer_planet_id'] and order.origin_system_id == entry['seller_system_id'] and order.origin_planet_id == entry['seller_planet_id']:
+									
+									# Updates planet inventory of delivered resource
 									for target_system in self.systems:
 										for target_planet in target_system.planets:
-											if target_system.system_id == row[0] and target_planet.planet_id == row[1]:
+											if target_system.system_id == entry['buyer_system_id'] and target_planet.planet_id == entry['buyer_planet_id']:
 												for imported_res in target_planet.imports:
-													if imported_res == row[5]:
+													if imported_res == entry['resource']:
 														target_planet.imports[imported_res]['inventory'] += 1
-														target_planet.update_planet_imports()
-
-							# Overwrites the ledger with new data
-							overwrite_csv('trade_ledger', update_data)
+									
+									# Removes entry
+									self.active_trades.remove(entry)
 							order.kill()
 							planet_buyer.orders.remove(order)
 
 							# Updates economy
 							self.calculate_global_total_value()
 							self.calculate_global_avg_resource_units()
-							self.calculate_local_system_price(time)
+							self.calculate_local_system_price()
 
 	# Creates the total value of the economy and generates an average unit price for each resource based on scarcity
 	def calculate_global_total_value (self):
@@ -192,11 +160,9 @@ class Galaxy:
 			self.allocation[res]['avg_res_unit'] = round(res_unit_count / self.allocation[res]['instances'])
 	
 	# Creates a system/local price based off the global total resource and local scarcity
-	def calculate_local_system_price (self, time):
+	def calculate_local_system_price (self):
 		for system in self.systems:
 			for planet in system.planets:
 				for export_res in planet.exports:
 					ADJUSTED_PRICE_INDEX = self.allocation[export_res]['avg_res_unit'] / planet.exports[export_res]['amount']
 					planet.exports[export_res]['unit_price'] = round(ADJUSTED_PRICE_INDEX * self.allocation[export_res]['global_unit_price'], 2)
-				if time == 1:
-					planet.save_init_state()

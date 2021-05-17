@@ -56,7 +56,7 @@ RES_ALLOCATION = {
 # Plots systems on a scatter for visuals
 pygame.init()
 FPS = 24
-GALAXY_SIZE = 500
+GALAXY_SIZE = 800
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode([GALAXY_SIZE, GALAXY_SIZE])
 galaxy = Galaxy(game_screen = screen,
@@ -67,14 +67,12 @@ galaxy = Galaxy(game_screen = screen,
 								resource_variation = 5,
 								price_modifier = 10)
 running = True
-time = 0
 while running:
 	screen.fill((255, 255, 255))
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
-	galaxy.step(time)
+	galaxy.step()
 	pygame.display.flip()
-	time += 1
 	clock.tick(FPS)
 pygame.quit()

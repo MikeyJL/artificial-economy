@@ -19,11 +19,6 @@ class System (pygame.sprite.Sprite):
 		else:
 			closest_system_distance = 0
 			while closest_system_distance < MIN_DISTANCE:
-				'''
-				This code is for negative and positive sizes
-				x_pos = random.randint(-self.galaxy_size, self.galaxy_size)
-				y_pos = random.randint(-self.galaxy_size, self.galaxy_size)
-				'''
 				x_pos = random.randint(0, self.galaxy_size)
 				y_pos = random.randint(0, self.galaxy_size)
 				other_systems_x = [other_system.x_loc for other_system in other_systems]
