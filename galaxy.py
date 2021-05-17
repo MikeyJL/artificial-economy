@@ -3,7 +3,7 @@ import pygame
 import random
 from system import System
 from planet import Planet
-from utils import init_csv, read_and_return_csv, overwrite_csv, GALAXY_HEADER, SYSTEMS_HEADER, EXPORTS_HEADER, IMPORTS_HEADER, TRADE_LEDGER_HEADER
+from utils import init_csv, read_and_return_csv, overwrite_csv
 
 class Galaxy:
 	def __init__(self, game_screen, galaxy_size, system_count, allocation, resource_deviation, resource_variation, price_modifier):
@@ -47,7 +47,7 @@ class Galaxy:
 				])
 
 			# Generates planets
-			for planet_id in range(random.randint(2, 4)):
+			for planet_id in range(random.randint(1, 2)):
 				naming_convention = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
 				# Builds the resources
@@ -101,7 +101,7 @@ class Galaxy:
 		
 			for planet_buyer in system_buyer.planets:
 				# Can only have less than 5 orders
-				if len(planet_buyer.orders) < 5:
+				if len(planet_buyer.orders) < 2:
 
 					# Then places on order and recorded on the global trade ledger
 					for trade_res in planet_buyer.imports:

@@ -1,7 +1,6 @@
 import pygame
 import random
 from galaxy import Galaxy
-import time as t
 
 RES_ALLOCATION = {
 	'iron': {

@@ -87,7 +87,7 @@ class Planet:
         'open'
       ])
     NEW_ORDER = Transporter(self.game_screen,
-                            system_seller.parent_system,
+                            system_seller.parent_id,
                             system_seller.planet_id,
                             (system_seller.x_loc, system_seller.y_loc),
                             self.parent_id,
