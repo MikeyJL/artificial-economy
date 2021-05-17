@@ -1,4 +1,5 @@
 import csv
+import string
 import pygame
 import random
 from system import System
@@ -33,9 +34,12 @@ class Galaxy:
 			self.resources.append(res)
 
 		# Generates star systems
-		for system_id in range(self.system_count):
+		for idx in range(self.system_count):
 			
 			# Generates the system obj
+			system_id = ''
+			while system_id in [system.system_id for system in self.systems] or system_id == '':
+				system_id = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
 			NEW_SYSTEM = System(game_screen, system_id, galaxy_size, self.systems)
 			with open('data/systems.csv', 'a+', newline='') as file:
 				writer = csv.writer(file)
