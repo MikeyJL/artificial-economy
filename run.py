@@ -57,12 +57,12 @@ RES_ALLOCATION = {
 # Plots systems on a scatter for visuals
 pygame.init()
 FPS = 24
-GALAXY_SIZE = 800
+GALAXY_SIZE = 500
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode([GALAXY_SIZE, GALAXY_SIZE])
 galaxy = Galaxy(game_screen = screen,
 								galaxy_size = GALAXY_SIZE,
-								system_count = 50,
+								system_count = 10,
 								allocation = RES_ALLOCATION,
 								resource_deviation = .1,
 								resource_variation = 5,

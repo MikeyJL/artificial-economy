@@ -7,10 +7,9 @@ TRADE_LEDGER_HEADER = ['system_id', 'seller_system_id', 'seller_location', 'reso
 EXPORTS_HEADER = ['system_id', 'resource', 'amount', 'unit_price']
 IMPORTS_HEADER = ['system_id', 'resource', 'inventory']
 
-def init_csv (file_name, headers, has_data, data):
+def init_csv (file_name, has_data, data):
 	with open('data/%s.csv' % file_name, 'w', newline='') as file:
 		writer = csv.writer(file)
-		writer.writerow(headers)
 		if has_data:
 			writer.writerow(data)
 
@@ -18,14 +17,12 @@ def read_and_return_csv (file_name):
 	return_data = []
 	with open('data/%s.csv' % file_name, 'r', newline='') as file:
 			reader = csv.reader(file)
-			next(reader, None)
 			for row in reader:
 				return_data.append(row)
 	return return_data
 
-def overwrite_csv (file_name, header, update_data):
+def overwrite_csv (file_name, update_data):
 	with open('data/%s.csv' % file_name, 'w', newline='') as file:
 			writer = csv.writer(file)
-			writer.writerow(header)
 			for row in update_data:
 				writer.writerow(row)

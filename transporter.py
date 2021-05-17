@@ -1,9 +1,10 @@
 import pygame
 
 class Transporter (pygame.sprite.Sprite):
-  def __init__ (self, game_screen, origin_system_id, current_x_y, target_system_id, target_x_y, target_system, color):
+  def __init__ (self, game_screen, origin_system_id, origin_planet_id, current_x_y, target_system_id, target_x_y, target_system, color):
     self.game_screen = game_screen
     self.origin_system_id = origin_system_id
+    self.origin_planet_id = origin_planet_id
     self.target_system_id = target_system_id
     self.target_x_y = target_x_y
     self.target_system = target_system
